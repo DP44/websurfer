@@ -13,7 +13,6 @@ def check_host(host, verbose=False):
         try:
             r = requests.get(f'http://{host}:{port}/', timeout=0.5, verify=False)
 
-            print(r)
             # No exception raised, this means there's a web server here.
             logger.success(f'Found server at http://{host}:{port}/')
         except requests.exceptions.ConnectTimeout:
