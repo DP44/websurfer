@@ -14,7 +14,7 @@ setup(
     long_description='fuck you',
     author='DP44',
     author_email='donkeypounder44@nigge.rs',
-    url='https://github.com/kennethreitz/samplemod',
+    url='https://github.com/DP44/websurfer',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
