@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import requests
 
 import websurf.utils as utils
@@ -11,13 +12,35 @@ def check_host(host, verbose=False):
     # TODO: Add support for SSL.
     for port in common_ports:
         try:
+            # If no exception is raised from this, that means there's a web server here.
             r = requests.get(f'http://{host}:{port}/', timeout=0.5, verify=False)
 
-            # No exception raised, this means there's a web server here.
+            # Add a separator for each entry if verbosity is on.
+            # TODO: Fuck off with this shit
+            if verbose:
+                logger.message('-' * 50)
+            
             logger.success(f'Found server at http://{host}:{port}/')
+
+            if verbose:
+                try:
+                    # TODO: Check status code
+                    html = r.text
+                    d = re.search('<\W*title\W*(.*)</title', html, re.IGNORECASE)
+
+                    if d.group(1):
+                        logger.success(f'    Page title:  \'{d.group(1)}\'')
+
+                    if 'Server' in r.headers:
+                        logger.success(f'    Server type: \'{r.headers["Server"]}\'')
+                except:
+                    # There is no title found.
+                    pass
+
         except requests.exceptions.ConnectTimeout:
             # if verbose:
-            #     logger.error(f'{host}:{port} timed out')
+            #     logger.error(f'{host}:{port} timed out.')
+
             pass
         except requests.exceptions.ConnectionError as ex:
             logger.error(ex)
@@ -33,7 +56,7 @@ def begin_discovery(args):
         return
 
     if not args.skip_ping:
-        logger.message("Checking for active hosts...")
+        logger.message('Checking for active hosts...')
 
         alive_addresses = utils.ping_hosts(addresses, verbose=args.verbose)
 
@@ -45,9 +68,9 @@ def begin_discovery(args):
 
         addresses = alive_addresses
     else:
-        logger.warning("Skipped ping check.")
+        logger.warning('Skipped ping check. (NOTE: This can be very slow!)')
 
-    logger.message("Beginning discovery process...")
+    logger.message('Beginning discovery process...')
 
     for addr in addresses:
         # if args.verbose:
@@ -55,4 +78,4 @@ def begin_discovery(args):
 
         check_host(addr, args.verbose)
 
-    logger.message("Discovery process finished.")
+    logger.message('Discovery process finished.')

@@ -24,7 +24,7 @@ Returns a list of hosts that successfully pinged back.
 def ping_hosts(hosts, attempts=3, verbose=False):
     alive_hosts = []
 
-    # TODO: Rewrite this mess.
+    # TODO: Make this update in real time and rewrite this fucking mess.
 
     # https://stackoverflow.com/questions/12101239/multiple-ping-script-in-python/12102040#12102040
     procs = {} # ip -> process
