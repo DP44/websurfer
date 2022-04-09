@@ -3,7 +3,6 @@
 A utility for discovering web servers on a network.
 
 
----
 ## Usage
 ```
 $ websurfer -v 192.168.0.0/24
