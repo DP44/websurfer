@@ -43,7 +43,14 @@ def check_host(host, verbose=False):
 
             pass
         except requests.exceptions.ConnectionError as ex:
-            logger.error(ex)
+            # Temporary
+            if 'The requested address is not valid' in ex.args[0].args[0]: # ew
+                if verbose:
+                    logger.warning(f'Skipping invalid address: {host}')
+
+                return
+
+            logger.error(ex.args[0])
 
 """
 Main discovery logic.
@@ -51,12 +58,17 @@ Main discovery logic.
 def begin_discovery(args):
     try:
         addresses = utils.expand_ip_range(args.range)
-    except:
-        logger.error('Invalid range given!')
+    except Exception as ex:
+        # really shitty hack
+        if 'does not appear to be a' in ex.args[0]:
+            logger.error('Invalid range given!')
+        else:
+            logger.error(ex)
+
         return
 
     if not args.skip_ping:
-        logger.message('Checking for active hosts...')
+        logger.message(f'Checking for active hosts... (Block size: {len(addresses) + 2})')
 
         alive_addresses = utils.ping_hosts(addresses, verbose=args.verbose)
 
@@ -64,7 +76,7 @@ def begin_discovery(args):
             logger.error('0 hosts responded.')
             return
 
-        logger.message(f'Finished ping process. ({len(alive_addresses)}/{len(addresses)})')
+        logger.message(f'Finished ping process. ({len(alive_addresses)}/{len(addresses) + 2})')
 
         addresses = alive_addresses
     else:

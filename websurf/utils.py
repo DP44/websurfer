@@ -7,6 +7,17 @@ import subprocess
 import websurf.logger as logger
 
 """
+Breaks a list into chunks of a given size.
+"""
+def split_list(orig, chunk_size):
+    chunks = []
+
+    for i in range(0, len(orig), chunk_size):
+        chunks.append(orig[i:i + chunk_size])
+
+    return chunks
+
+"""
 Expands a given netblock into it's individual addresses.
 """
 def expand_ip_range(range):
@@ -24,45 +35,62 @@ Returns a list of hosts that successfully pinged back.
 def ping_hosts(hosts, attempts=3, verbose=False):
     alive_hosts = []
 
-    # TODO: Make this update in real time and rewrite this fucking mess.
+    # TODO: Make this update in real time and rewrite this fucking 
+    #       mess with a proper ping system.
 
-    # https://stackoverflow.com/questions/12101239/multiple-ping-script-in-python/12102040#12102040
-    procs = {} # ip -> process
+    # Make sure we aren't running a shit ton of processes at once.
+    # If we weren't relying off the ping command, this wouldn't be
+    # a thing we'd ever need to do.
+    chunks = split_list(hosts, 256)
 
-    for host in reversed(hosts):
-        # logger.message(f'Pinging host \'{host}\'.')
+    while chunks:
+        chunk = chunks[0]
+        
+        # TODO: This is more debug info, add a -d flag for debug messages?
+        if verbose:
+            logger.message(f'Processing chunk of size: {len(chunk)} ({len(chunks)} chunk/s left)')
 
-        procs[host] = subprocess.Popen(
-            f'ping -n {attempts} {host}',
-            stdout=subprocess.PIPE)
+        # https://stackoverflow.com/questions/12101239/multiple-ping-script-in-python/12102040#12102040
+        procs = {} # ip -> process
 
-    while procs:
-        # Shitty hack to avoid an error.
-        host = list(procs)[-1]
-        proc = procs[list(procs)[-1]]
+        for host in reversed(chunk):
+            # logger.message(f'Pinging host \'{host}\'.')
 
-        # Wait until the process is finished.
-        if proc.poll() is not None:
-            output, err = proc.communicate()
-            output = output.decode('utf-8')
+            procs[host] = subprocess.Popen(
+                f'ping -n {attempts} {host}',
+                stdout=subprocess.PIPE)
 
-            # Parse the output.
-            if 'TTL' in output:
-                if verbose:
-                    logger.message(f'Received response from host \'{host}\'.')
+        while procs:
+            # Shitty hack to avoid an error.
+            host = list(procs)[-1]
+            proc = procs[list(procs)[-1]]
 
-                alive_hosts.append(host)
-            elif 'unreachable' in output:
-                pass
-            elif 'timed out' in output:
-                if verbose:
-                    logger.error(f'Connection to host {host} timed out.')
-            else:
-                output_lines = output.split('\r\n')
+            # Wait until the process is finished.
+            if proc.poll() is not None:
+                output, err = proc.communicate()
+                output = output.decode('utf-8')
 
-                for line in output_lines:
-                    print(line)
+                # Parse the output.
+                if 'TTL' in output:
+                    if verbose:
+                        logger.message(f'Received response from host \'{host}\'.')
 
-            procs.popitem()
+                    alive_hosts.append(host)
+                elif 'unreachable' in output:
+                    pass
+                elif 'timed out' in output:
+                    # if verbose:
+                    #     logger.error(f'Connection to host {host} timed out.')
+
+                    pass
+                else:
+                    output_lines = output.split('\r\n')
+
+                    for line in output_lines:
+                        print(line)
+
+                procs.popitem()
+
+        chunks.pop(0)
 
     return alive_hosts
