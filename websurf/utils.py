@@ -47,8 +47,7 @@ def ping_hosts(hosts, attempts=3, verbose=False):
         chunk = chunks[0]
         
         # TODO: This is more debug info, add a -d flag for debug messages?
-        if verbose:
-            logger.message(f'Processing chunk of size: {len(chunk)} ({len(chunks)} chunk/s left)')
+        logger.debug(f'Processing chunk of size: {len(chunk)} ({len(chunks)} chunk/s left)')
 
         # https://stackoverflow.com/questions/12101239/multiple-ping-script-in-python/12102040#12102040
         procs = {} # ip -> process

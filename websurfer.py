@@ -18,12 +18,19 @@ if __name__ == '__main__':
         help='Outputs more information.',
         default=False)
 
+    parser.add_argument('-d', 
+        action='store_true', dest='debug',
+        help='Outputs debug information.',
+        default=False)
+
     parser.add_argument('-s', 
         action='store_true', dest='skip_ping',
         help='Skips the ping process and jumps straight to the discovery process.',
         default=False)
 
     args = parser.parse_args()
+
+    logger.debug_mode = args.debug
 
     # print(args)
     begin_discovery(args)
