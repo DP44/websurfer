@@ -13,7 +13,7 @@ def expand_ip_range(range):
     addresses = []
 
     # We have to do it in this way because it's a generator.
-    for addr in ipaddress.ip_network(range).hosts():
+    for addr in ipaddress.ip_network(range, strict=False).hosts():
         addresses.append(str(addr))
 
     return addresses
