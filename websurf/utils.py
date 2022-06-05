@@ -31,7 +31,7 @@ def expand_ip_range(range):
 """
 Returns a list of hosts that successfully pinged back.
 """
-def ping_hosts(hosts, attempts=3, verbose=False):
+def ping_hosts(hosts, attempts=3, chunk_size=16, verbose=False):
     alive_hosts = []
 
     # TODO: Make this update in real time and rewrite this fucking 
@@ -40,7 +40,7 @@ def ping_hosts(hosts, attempts=3, verbose=False):
     # Make sure we aren't running a shit ton of processes at once.
     # If we weren't relying off the ping command, this wouldn't be
     # a thing we'd ever need to do.
-    chunks = split_list(hosts, 256)
+    chunks = split_list(hosts, chunk_size) # was 256 but my pc couldn't handle it lol
 
     while chunks:
         chunk = chunks[0]
@@ -51,12 +51,14 @@ def ping_hosts(hosts, attempts=3, verbose=False):
         # https://stackoverflow.com/questions/12101239/multiple-ping-script-in-python/12102040#12102040
         procs = {} # ip -> process
 
+        # NOTE: THIS IS VERY CPU INTENSIVE WITH LARGE CHUNKS!!!! STOP DOING THIS 
         for host in reversed(chunk):
             # logger.message(f'Pinging host \'{host}\'.')
 
+            # Doesn't work on linux, the output is spammed as of now.
             procs[host] = subprocess.Popen(
-                f'ping -n {attempts} {host}',
-                stdout=subprocess.PIPE)
+                ('ping -c ' if platform.system() == 'Linux' else 'ping -n ') + 
+                f'{attempts} {host}', shell=True, stdout=subprocess.PIPE)
 
         while procs:
             # Shitty hack to avoid an error.
@@ -66,6 +68,7 @@ def ping_hosts(hosts, attempts=3, verbose=False):
             # Wait until the process is finished.
             if proc.poll() is not None:
                 output, err = proc.communicate()
+                print(output)
                 output = output.decode('utf-8')
 
                 # Parse the output.

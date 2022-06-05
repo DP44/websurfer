@@ -28,6 +28,10 @@ if __name__ == '__main__':
         help='Skips the ping process and jumps straight to the discovery process.',
         default=False)
 
+    parser.add_argument('-c', type=int, dest='size',
+        help='The number of hosts in each chunk for the pinging process.',
+        default=16)
+
     args = parser.parse_args()
 
     logger.debug_mode = args.debug

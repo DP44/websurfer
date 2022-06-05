@@ -70,7 +70,8 @@ def begin_discovery(args):
     if not args.skip_ping:
         logger.message(f'Checking for active hosts... (Block size: {len(addresses) + 2})')
 
-        alive_addresses = utils.ping_hosts(addresses, verbose=args.verbose)
+        alive_addresses = utils.ping_hosts(addresses, 
+            chunk_size=args.size, verbose=args.verbose)
 
         if len(alive_addresses) <= 0:
             logger.error('0 hosts responded.')
